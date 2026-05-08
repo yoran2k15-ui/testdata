@@ -1,0 +1,687 @@
+{
+  "name": "HelpsDeskAutomation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "af7f0d01-93f2-4074-b6dc-2d7d5650e70c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "b169fb4a-2540-43cb-8d01-0cae559ee03d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Classificeer de tickets op basis van deze lijst: {{ JSON.stringify($(\"HTTP Request Categories\").item.json) }}\nGebruik deze wachtrijen voor routering: {{ JSON.stringify($(\"HTTP Request Queues\").item.json) }}\n\nAnalyseer nu het volgende ticket:\n{{ $json.body_redacted }}\n\n\"Antwoord uitsluitend in JSON formaat. Gebruik exact deze structuur:\n{\n\"category_id\": \"...\",\n\"confidence\": 0.9,\n\"queue_id\": \"...\",\n\"route_reason\": \"...\",\n\"draft_reply\": \"...\"\n}\"",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        368,
+        256
+      ],
+      "id": "3a84e5aa-4f19-4098-8ce9-0236e3c8e09e",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/deepseek/deepseek-v3.2",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        400
+      ],
+      "id": "844e310f-8d23-4401-847a-a94b2039fd57",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "vDUMBh2ErL6Glsbh",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 120
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        192,
+        256
+      ],
+      "id": "63561a71-79d5-4ca5-84a8-42400cba1be8",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "field": "category_id"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "category_id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        656
+      ],
+      "id": "42f6d7dd-ae86-4870-a702-550b4b88b1d9",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "count_category_id",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        224,
+        656
+      ],
+      "id": "d47cefb2-f8ed-418a-8f77-d32a99747bb1",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b158da5b-ec55-41f6-99e4-df3bce0e8306",
+              "leftValue": "={{ $json.queue_id }}",
+              "rightValue": "=Q_FINANCE_PROCUREMENT",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "c2fb3ab9-e4fd-4d2d-a523-fe3d802b230a",
+              "leftValue": "={{ $json.queue_id }}",
+              "rightValue": "=Q_HR",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        16,
+        528
+      ],
+      "id": "3f1e42e0-67d9-477b-8617-87bfebe0bb60",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        432,
+        528
+      ],
+      "id": "c27b0e51-08e0-4646-a5e7-8a379eac9326",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -176,
+        528
+      ],
+      "id": "e3fa9290-1819-4cb9-9fd9-d83594d39e08",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "markdown_table",
+        "binaryPropertyName": "latest.md",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        656
+      ],
+      "id": "28af0392-137a-4c62-ab2a-d45c93b09da5",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "binaryPropertyName": "routed_tickets.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        528
+      ],
+      "id": "e50ccbbd-c2c7-43be-94af-e11548ef8c58",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/yoran2k15-ui/testdata/refs/heads/main/queues.json",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        48,
+        0
+      ],
+      "id": "5c4980ae-09f9-4812-9f8f-6d29ef5fd238",
+      "name": "HTTP Request Queues"
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/yoran2k15-ui/testdata/refs/heads/main/categories.json",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "0a12ca7c-28e2-4f6d-a18a-1ce5222461fd",
+      "name": "HTTP Request Categories"
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/yoran2k15-ui/testdata/refs/heads/main/tickets.csv",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1bb83aa4-5ed3-4edb-9ad6-2a19ac53c3b6",
+      "name": "HTTP Request Tickets"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "18060e65-066d-4601-acb5-fa3f05859c6a",
+              "name": "run_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        256
+      ],
+      "id": "62a83eda-eda6-4b05-9c49-f4c5c74d8199",
+      "name": "Add Run ID"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.parse($json.text) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        256
+      ],
+      "id": "fbc5ed50-661b-4b24-92d4-281bf7507053",
+      "name": "AI to JSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7859d678-6a20-4d01-8506-e883b21d4652",
+              "name": "category_id",
+              "value": "={{ $json.category_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6c2b7d10-0caf-4667-a415-11296183e694",
+              "name": "queue_id",
+              "value": "={{ $json.queue_id }}",
+              "type": "string"
+            },
+            {
+              "id": "49055f54-e6e6-443f-8704-b4adef21731e",
+              "name": "confidence",
+              "value": "={{ $json.confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "92b1f238-f6b2-4f62-a949-632ec37ff8ca",
+              "name": "draft_reply",
+              "value": "={{ $json.draft_reply }}",
+              "type": "string"
+            },
+            {
+              "id": "f7a1ed97-2fa9-441c-bda3-db659228a985",
+              "name": "run_id",
+              "value": "={{ $json.run_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        528
+      ],
+      "id": "495d8203-9d1a-4f6e-81a3-2988ee8d873d",
+      "name": "keep columns"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d3c6c36c-43b0-4730-b02f-aa8a0ab3b06e",
+              "name": "file_content",
+              "value": "={{ JSON.stringify($json.data, null, 2) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        528
+      ],
+      "id": "56a0145d-aafc-4f95-a977-f9ba043d4473",
+      "name": "Prepare File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Haal de run_id op uit de allereerste rij (die hebben ze toch allemaal)\nconst runId = items[0].json.run_id || \"Onbekend\";\n\n// Maak de kop van de tabel\nlet markdown = `### Pareto Rapportage - Run ID: ${runId}\\n\\n`;\nmarkdown += `| Categorie | Aantal | Percentage |\\n`;\nmarkdown += `| :--- | :--- | :--- |\\n`;\n\n// Voeg elke rij toe aan de tabel\nfor (const item of items) {\n  markdown += `| ${item.json.category_id} | ${item.json.count_category_id} | ${item.json.percentage} |\\n`;\n}\n\n// Geef het resultaat terug als één tekstblok\nreturn {\n  markdown_table: markdown\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        656
+      ],
+      "id": "d7f6bf76-afb7-4f0b-b491-27161ac35e54",
+      "name": "Generate MD FIle"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Haal alle items op\nconst items = $input.all();\n\n// 2. Bereken het totaal door de counts bij elkaar op te tellen\nconst totalTickets = items.reduce((sum, item) => {\n  return sum + (item.json.count_category_id || 0);\n}, 0);\n\n// 3. Voeg de juiste percentages toe aan elk item\nreturn items.map(item => {\n  const count = item.json.count_category_id || 0;\n  \n  // Bereken percentage (bijv. 1 / 5 * 100 = 20)\n  const calcPercentage = totalTickets > 0 ? (count / totalTickets) * 100 : 0;\n  \n  // Zet het terug in de JSON\n  item.json.percentage = calcPercentage.toFixed(1) + '%';\n  \n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        656
+      ],
+      "id": "569b42fe-478a-4f18-8846-07ab31c55c9b",
+      "name": "Calculate Percentages"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (let item of $input.all()) {\n    let body = item.json.body || item.json.description || \"\"; // Pas aan naar jouw CSV kolomnaam\n\n    // Regex patronen\n    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/g;\n    const phoneRegex = /(?:\\+31|0)(?:\\s?\\d){9,10}/g;\n    const bsnRegex = /\\b\\d{9}\\b/g; // Simpele check op 9 opeenvolgende cijfers\n\n    // Vervangen\n    body = body.replace(emailRegex, \"[EMAIL_REDACTED]\");\n    body = body.replace(phoneRegex, \"[PHONE_REDACTED]\");\n    body = body.replace(bsnRegex, \"[BSN_REDACTED]\");\n\n    item.json.body_redacted = body;\n\n    // S1: Data-minimalisatie: verwijder de originele privacygevoelige body!\n    delete item.json.body; \n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        256
+      ],
+      "id": "3ccc7797-7a7c-458b-82c2-f9bee67f32f1",
+      "name": "Filter Sensitive Data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Queues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Add Run ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "AI to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Calculate Percentages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "keep columns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Prepare File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Queues": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Categories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Categories": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Tickets": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Run ID": {
+      "main": [
+        [
+          {
+            "node": "Filter Sensitive Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI to JSON": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "keep columns": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare File": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate MD FIle": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Percentages": {
+      "main": [
+        [
+          {
+            "node": "Generate MD FIle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Sensitive Data": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "022e0c5e-a6fc-4faf-b5da-305829ff6165",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bf7ba3b458efea11f2b877c2581e36d57752bfb6acea083fd92aad5f6d695947"
+  },
+  "id": "Xgoc89yHa5CrNOLL",
+  "tags": []
+}

@@ -1,0 +1,14 @@
+### Pareto Rapportage - Run ID: Onbekend
+
+| Categorie | Aantal | Percentage |
+| :--- | :--- | :--- |
+| CAT_M365_COPILOT | 19 | 15.8% |
+| CAT_HARDWARE_DEVICE | 16 | 13.3% |
+| CAT_NETWORK_WIFI | 15 | 12.5% |
+| CAT_VPN_REMOTE | 14 | 11.7% |
+| CAT_SOFTWARE_INSTALL | 13 | 10.8% |
+| CAT_PRINTER | 13 | 10.8% |
+| CAT_OTHER | 11 | 9.2% |
+| CAT_GH_COPILOT | 8 | 6.7% |
+| CAT_ACCESS_ACCOUNT | 6 | 5.0% |
+| CAT_ONBOARDING_HR | 5 | 4.2% |

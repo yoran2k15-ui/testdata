@@ -1,0 +1,5 @@
+### Pareto Rapportage - Run ID: Onbekend
+
+| Categorie | Aantal | Percentage | Trend |
+| :--- | :--- | :--- | :--- |
+| CAT_ACCESS_ACCOUNT | 1 | 100.0% | 📈 Stijgend (Nieuw) (was 0) |
